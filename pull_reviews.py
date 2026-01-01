@@ -21,7 +21,7 @@ def format_review(review: PaperReview, no_markdown: bool = False) -> str:
 
     if no_markdown:
         # Plain text format
-        lines.append(review.paper_title)
+        lines.append(f"[Review] {review.paper_title}")
         if review.paper_url:
             lines.append(review.paper_url)
 
