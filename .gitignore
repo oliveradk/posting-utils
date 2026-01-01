@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .env
 .pt_browser_state.json
+reviews.md
