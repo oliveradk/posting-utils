@@ -20,7 +20,7 @@ PAPERTRAILS_PROFILE=your_profile_id_here
 
 ```bash
 source .venv/bin/activate
-python pull_reviews.py > reviews.txt
+python pull_reviews.py > reviews.md
 ```
 
 ## Options
