@@ -25,23 +25,18 @@ def format_review(review: PaperReview, no_markdown: bool = False) -> str:
         if review.paper_url:
             lines.append(review.paper_url)
 
-        meta_parts = []
-        if review.authors:
-            author_str = ", ".join(review.authors[:3])
-            if len(review.authors) > 3:
-                author_str += " et al."
-            meta_parts.append(author_str)
-        if review.journal:
-            meta_parts.append(review.journal)
-        if meta_parts:
-            lines.append(" ".join(meta_parts))
-
         if review.rating is not None:
-            lines.append(f"Rating: {review.rating}/5")
+            stars = "★" * int(review.rating) + "☆" * (5 - int(review.rating))
+            lines.append(f"{stars} ({review.rating}/5)")
 
         if review.review_text:
             lines.append("")
             lines.append(review.review_text)
+
+        # Add cross-post link
+        if review.paper_id:
+            lines.append("")
+            lines.append(f"https://www.papertrailshq.com/papers/{review.paper_id}#reviews")
     else:
         # Markdown format
         if review.paper_url:
