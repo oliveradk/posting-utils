@@ -86,41 +86,18 @@ def parse_reviews_from_html(html: str) -> list[PaperReview]:
             if review_text and len(review_text) > 10:
                 review_texts[paper_id] = review_text
 
-    # Extract external URLs (arxiv, doi, etc.)
-    external_urls = {}
-    for link in soup.find_all("a", href=re.compile(r"https?://(?:arxiv|doi\.org|www\.anthropic)")):
-        href = link.get("href", "").rstrip("\\")
-        # Find nearby paper ID
-        parent = link.find_parent(class_=lambda c: c and "card" in str(c))
-        if parent:
-            paper_link = parent.find("a", href=re.compile(r"/papers/"))
-            if paper_link:
-                match = re.search(r"/papers/([^#\?/]+)", paper_link.get("href", ""))
-                if match:
-                    paper_id = match.group(1)
-                    # Prefer non-PDF links
-                    if paper_id not in external_urls or ".pdf" not in href:
-                        external_urls[paper_id] = href
-
-    # Also search raw HTML for external URLs near paper IDs
-    for match in re.finditer(r'/papers/([^#\?/\"]+).*?(https?://(?:arxiv\.org/abs|doi\.org|www\.anthropic\.com)[^\s\"\\<>]+)', html, re.DOTALL):
-        paper_id = match.group(1)
-        url = match.group(2).rstrip("\\")
-        if paper_id not in external_urls:
-            external_urls[paper_id] = url
-
     # Parse paper cards
     cards = soup.find_all("div", class_=lambda c: c and "card-lift" in c)
 
     for card in cards:
-        review = parse_card(card, review_texts, external_urls)
+        review = parse_card(card, review_texts)
         if review:
             reviews.append(review)
 
     return reviews
 
 
-def parse_card(card, review_texts: dict, external_urls: dict) -> Optional[PaperReview]:
+def parse_card(card, review_texts: dict) -> Optional[PaperReview]:
     """Parse a paper card element."""
     text = card.get_text(separator=" ", strip=True)
 
@@ -135,9 +112,9 @@ def parse_card(card, review_texts: dict, external_urls: dict) -> Optional[PaperR
 
     # Find paper ID from link
     paper_id = None
-    link = card.find("a", href=re.compile(r"/papers/"))
-    if link:
-        href = link.get("href", "")
+    pt_link = card.find("a", href=re.compile(r"/papers/"))
+    if pt_link:
+        href = pt_link.get("href", "")
         match = re.search(r"/papers/([^#\?/]+)", href)
         if match:
             paper_id = match.group(1)
@@ -164,10 +141,21 @@ def parse_card(card, review_texts: dict, external_urls: dict) -> Optional[PaperR
             journal = elem_text
             break
 
-    # Get external URL if available, otherwise use Paper Trails URL
-    paper_url = external_urls.get(paper_id) if paper_id else None
-    if not paper_url and link:
-        href = link.get("href", "")
+    # Find external URL directly in this card (prefer non-PDF, non-papertrails links)
+    paper_url = None
+    for link in card.find_all("a", href=re.compile(r"https?://")):
+        href = link.get("href", "").rstrip("\\")
+        if "papertrailshq.com" not in href:
+            # Convert arxiv PDF links to abstract links
+            if "arxiv.org/pdf/" in href:
+                href = href.replace("arxiv.org/pdf/", "arxiv.org/abs/").replace(".pdf", "")
+            # Prefer non-PDF links
+            if paper_url is None or ".pdf" in paper_url:
+                paper_url = href
+
+    # Fallback to Paper Trails URL
+    if not paper_url and pt_link:
+        href = pt_link.get("href", "")
         if href.startswith("/"):
             paper_url = f"{BASE_URL}{href}"
 
