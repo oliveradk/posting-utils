@@ -82,9 +82,9 @@ def main():
         help="Output raw data instead of formatted text",
     )
     parser.add_argument(
-        "--no-markdown", "-n",
+        "--markdown", "-m",
         action="store_true",
-        help="Output plain text without markdown formatting",
+        help="Output with markdown formatting",
     )
 
     args = parser.parse_args()
@@ -126,7 +126,7 @@ def main():
         for i, review in enumerate(reviews):
             if i > 0:
                 print("\n" + "=" * 60 + "\n")
-            print(format_review(review, no_markdown=args.no_markdown))
+            print(format_review(review, no_markdown=not args.markdown))
 
 
 if __name__ == "__main__":

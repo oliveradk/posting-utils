@@ -20,21 +20,10 @@ PAPERTRAILS_PROFILE=your_profile_id_here
 
 ```bash
 source .venv/bin/activate
-
-# Pull and format reviews (uses .env profile)
-python pull_reviews.py
-
-# Plain text output (no markdown)
-python pull_reviews.py --no-markdown
-
-# Save to file
-python pull_reviews.py > reviews.md
-
-# Use specific profile
-python pull_reviews.py <profile_id>
+python pull_reviews.py > reviews.txt
 ```
 
 ## Options
 
-- `--no-markdown`, `-n`: Plain text output without markdown formatting
+- `--markdown`, `-m`: Output with markdown formatting
 - `--raw`, `-r`: Output raw data fields
